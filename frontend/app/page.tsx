@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
+const API_BASE_URL = 'http://localhost:5000'
 
 export default function FeedbackForm() {
   const [formData, setFormData] = useState({
+    order_id: '',
     name: '',
     experience: '',
     buddyOnTime: '',
@@ -27,6 +29,10 @@ export default function FeedbackForm() {
     improvement: ''
   })
 
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+
   const [charCounts, setCharCounts] = useState({
     tipDetails: 0,
     liked: 0,
@@ -40,7 +46,6 @@ export default function FeedbackForm() {
       [name]: value
     }))
 
-    // Update character count for textareas
     if (name in charCounts) {
       setCharCounts(prev => ({
         ...prev,
@@ -49,46 +54,92 @@ export default function FeedbackForm() {
     }
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
-    alert('Thank you for your feedback! Your response has been submitted successfully.')
-    
-    // Reset form
-    setFormData({
-      name: '',
-      experience: '',
-      buddyOnTime: '',
-      buddyCourteous: '',
-      buddyHandling: '',
-      buddyPickup: '',
-      salesUnderstanding: '',
-      salesClarity: '',
-      salesProfessionalism: '',
-      salesTransparency: '',
-      salesFollowup: '',
-      salesDecision: '',
-      cxOnboarding: '',
-      cxCourteous: '',
-      cxResolution: '',
-      cxCommunication: '',
-      recommendation: '',
-      tipAsked: '',
-      tipDetails: '',
-      liked: '',
-      improvement: ''
-    })
-    setCharCounts({
-      tipDetails: 0,
-      liked: 0,
-      improvement: 0
-    })
+    setLoading(true)
+    setError('')
+    setSuccess(false)
+
+    try {
+      const feedbackData = {
+        order_id: formData.order_id,
+        name: formData.name,
+        experience: formData.experience,
+        buddy_on_time: formData.buddyOnTime ? parseInt(formData.buddyOnTime) : null,
+        buddy_courteous: formData.buddyCourteous ? parseInt(formData.buddyCourteous) : null,
+        buddy_handling: formData.buddyHandling ? parseInt(formData.buddyHandling) : null,
+        buddy_pickup: formData.buddyPickup ? parseInt(formData.buddyPickup) : null,
+        sales_understanding: formData.salesUnderstanding ? parseInt(formData.salesUnderstanding) : null,
+        sales_clarity: formData.salesClarity ? parseInt(formData.salesClarity) : null,
+        sales_professionalism: formData.salesProfessionalism ? parseInt(formData.salesProfessionalism) : null,
+        sales_transparency: formData.salesTransparency ? parseInt(formData.salesTransparency) : null,
+        sales_followup: formData.salesFollowup ? parseInt(formData.salesFollowup) : null,
+        sales_decision: formData.salesDecision ? parseInt(formData.salesDecision) : null,
+        cx_onboarding: formData.cxOnboarding ? parseInt(formData.cxOnboarding) : null,
+        cx_courteous: formData.cxCourteous ? parseInt(formData.cxCourteous) : null,
+        cx_resolution: formData.cxResolution ? parseInt(formData.cxResolution) : null,
+        cx_communication: formData.cxCommunication ? parseInt(formData.cxCommunication) : null,
+        recommendation: formData.recommendation ? parseInt(formData.recommendation) : 0,
+        tip_asked: formData.tipAsked || 'no',
+        tip_details: formData.tipDetails || '',
+        liked: formData.liked || '',
+        improvement: formData.improvement || ''
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/feedback/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSuccess(true)
+        alert('Thank you for your feedback! Your response has been submitted successfully.')
+        
+        setFormData({
+          order_id: '',
+          name: '',
+          experience: '',
+          buddyOnTime: '',
+          buddyCourteous: '',
+          buddyHandling: '',
+          buddyPickup: '',
+          salesUnderstanding: '',
+          salesClarity: '',
+          salesProfessionalism: '',
+          salesTransparency: '',
+          salesFollowup: '',
+          salesDecision: '',
+          cxOnboarding: '',
+          cxCourteous: '',
+          cxResolution: '',
+          cxCommunication: '',
+          recommendation: '',
+          tipAsked: '',
+          tipDetails: '',
+          liked: '',
+          improvement: ''
+        })
+        setCharCounts({ tipDetails: 0, liked: 0, improvement: 0 })
+      } else {
+        setError(result.message || 'Failed to submit feedback')
+        alert('Error: ' + (result.message || 'Failed to submit feedback'))
+      }
+    } catch (err) {
+      setError('Network error. Please check if backend server is running.')
+      alert('Network error. Please check if backend server is running on http://localhost:5000')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6 sm:p-10 md:p-12">
-        {/* Logo */}
         <div className="text-center mb-6">
           <img 
             src="/smg-og.png" 
@@ -97,10 +148,8 @@ export default function FeedbackForm() {
           />
         </div>
         
-        {/* Grey line under logo */}
         <div className="border-b border-gray-300 mb-6"></div>
 
-        {/* Title and Subtitle */}
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-4">
           Store My Goods - Feedback Form
         </h1>
@@ -109,12 +158,26 @@ export default function FeedbackForm() {
           Your input helps us improve our services and serve you better.
         </p>
         
-        {/* Black line after description */}
         <div className="border-b-2 border-gray-900 mb-8 sm:mb-12"></div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-          {/* Name Field */}
+          
+          <div>
+            <label htmlFor="order_id" className="block text-sm font-medium text-gray-700 mb-2">
+              Order ID <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="order_id"
+              name="order_id"
+              value={formData.order_id}
+              onChange={handleInputChange}
+              required
+              placeholder="e.g., ORD1001"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+            />
+          </div>
+
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
               Name <span className="text-red-500">*</span>
@@ -130,7 +193,6 @@ export default function FeedbackForm() {
             />
           </div>
 
-          {/* Overall Experience */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-4">
               How was your overall experience? <span className="text-red-500">*</span>
@@ -172,7 +234,6 @@ export default function FeedbackForm() {
             </div>
           </div>
 
-          {/* Rate the Buddy Section - Only show if experience is not 'excellent' */}
           {formData.experience && formData.experience !== 'excellent' && (
           <div className="border-t pt-6 sm:pt-8">
             <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -180,7 +241,6 @@ export default function FeedbackForm() {
             </label>
             
             <div className="space-y-6">
-              {/* Did the team arrive on time? */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Did the team arrive on time?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -207,7 +267,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Were they courteous and respectful? */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Were they courteous and respectful during the interaction?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -234,7 +293,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Was handling and packaging done smoothly? */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Was handling and packaging done smoothly?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -261,7 +319,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Was the pick up delivery process smooth? */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Was the pick up delivery process smooth?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -291,7 +348,6 @@ export default function FeedbackForm() {
           </div>
           )}
 
-          {/* Rate the Sales Team Section - Only show if experience is not 'excellent' */}
           {formData.experience && formData.experience !== 'excellent' && (
           <div className="border-t pt-6 sm:pt-8">
             <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -299,7 +355,6 @@ export default function FeedbackForm() {
             </label>
             
             <div className="space-y-6">
-              {/* Understanding storage needs */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">How well did the sales consultant understand your storage?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -326,7 +381,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Clarity in explaining */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Was the consultant clear in explaining pricing, plans and process?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -353,7 +407,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Professionalism and courtesy */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">How would you rate the consultant&apos;s professionalism and courtesy?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -380,7 +433,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Transparency */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">How transparent was the consultant about charges, process and policies?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -407,7 +459,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Follow up and responsiveness */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">How would you rate their follow up and responsiveness after the initial call?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -434,7 +485,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Informed decision */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Did the consultant help you make a well-informed decision?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -464,7 +514,6 @@ export default function FeedbackForm() {
           </div>
           )}
 
-          {/* Rate the Customer Experience Team Section - Only show if experience is not 'excellent' */}
           {formData.experience && formData.experience !== 'excellent' && (
           <div className="border-t pt-6 sm:pt-8">
             <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -472,7 +521,6 @@ export default function FeedbackForm() {
             </label>
             
             <div className="space-y-6">
-              {/* Onboarding process */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Did the customer experience representative explain the Onboarding (KYC / Declaration) process clearly?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -497,7 +545,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Courteous and respectful */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Were they courteous and respectful during the interaction?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -522,7 +569,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Timely resolution */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Was a timely resolution provided to you if any issues were faced?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -547,7 +593,6 @@ export default function FeedbackForm() {
                 </div>
               </div>
 
-              {/* Clear communication */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-8">
                 <p className="text-sm text-gray-600 mb-3 sm:mb-0 sm:w-2/5">Was the communication Clear and simple?</p>
                 <div className="flex justify-evenly sm:flex-1">
@@ -575,13 +620,11 @@ export default function FeedbackForm() {
           </div>
           )}
 
-          {/* Recommendation Scale */}
           <div className="border-t pt-6 sm:pt-8">
             <label className="block text-sm font-medium text-gray-700 mb-6">
               How likely would you recommend Store my goods to a friend or colleague? <span className="text-red-500">*</span>
             </label>
             <div className="space-y-3">
-              {/* Slider with value display */}
               <div className="relative px-2">
                 {formData.recommendation && (
                   <div 
@@ -606,14 +649,12 @@ export default function FeedbackForm() {
                       : '#e5e7eb'
                   }}
                 />
-                {/* Number labels */}
                 <div className="flex justify-between text-xs text-gray-500 mt-2 px-1">
                   <span>0</span>
                   <span className="hidden sm:inline"></span>
                   <span>10</span>
                 </div>
               </div>
-              {/* Text Labels */}
               <div className="flex justify-between text-xs sm:text-sm text-gray-600 px-2">
                 <span>Unlikely</span>
                 <span>Maybe</span>
@@ -622,7 +663,6 @@ export default function FeedbackForm() {
             </div>
           </div>
 
-          {/* Tip Question */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Did any of our team members ask for any kind of tip? <span className="text-red-500">*</span>
@@ -653,7 +693,6 @@ export default function FeedbackForm() {
               </label>
             </div>
 
-            {/* Conditional Field */}
             {formData.tipAsked === 'yes' && (
               <div className="mt-4 p-4 bg-gray-50 rounded-md">
                 <label htmlFor="tipDetails" className="block text-sm font-medium text-gray-700 mb-2">
@@ -675,7 +714,6 @@ export default function FeedbackForm() {
             )}
           </div>
 
-          {/* What did you like */}
           <div>
             <label htmlFor="liked" className="block text-sm font-medium text-gray-700 mb-2">
               What did you like the most about our service?
@@ -694,7 +732,6 @@ export default function FeedbackForm() {
             </div>
           </div>
 
-          {/* Improvement suggestions */}
           <div>
             <label htmlFor="improvement" className="block text-sm font-medium text-gray-700 mb-2">
               We&apos;re always looking to improve, how can we do better?
@@ -713,16 +750,27 @@ export default function FeedbackForm() {
             </div>
           </div>
 
-          {/* Submit Button */}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-green-600 text-sm">Feedback submitted successfully!</p>
+            </div>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 sm:py-4 px-6 rounded-md transition duration-200 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            disabled={loading}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 sm:py-4 px-6 rounded-md transition duration-200 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
           >
-            Submit
+            {loading ? 'Submitting...' : 'Submit Feedback'}
           </button>
         </form>
 
-        {/* Footer */}
         <div className="mt-8 text-center text-xs sm:text-sm text-gray-500">
           <p>© 2026 Store My Goods. Thank you for your feedback!</p>
         </div>
@@ -730,9 +778,4 @@ export default function FeedbackForm() {
     </div>
   )
 }
-
-
-
-
-
 
