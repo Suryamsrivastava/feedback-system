@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-const API_BASE_URL = 'http://localhost:5000'
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 export default function FeedbackForm() {
   const [formData, setFormData] = useState({
