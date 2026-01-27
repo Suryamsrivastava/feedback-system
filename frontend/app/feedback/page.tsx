@@ -63,7 +63,7 @@ export default function FeedbackPage() {
 
     setToken(tokenParam);
 
-    fetch(`${API_BASE_URL}/api/v2/feedback/validate/${tokenParam}`)
+    fetch(`${API_BASE_URL}/api/feedback/validate/${tokenParam}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.valid) {
@@ -124,7 +124,7 @@ export default function FeedbackPage() {
         improvement: formData.improvement || ''
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v2/feedback/submit-with-token`, {
+      const response = await fetch(`${API_BASE_URL}/api/feedback/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

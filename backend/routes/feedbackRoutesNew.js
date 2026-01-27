@@ -2,12 +2,13 @@ const express = require("express");
 const router = express.Router();
 const feedbackControllerNew = require("../controllers/feedbackControllerNew");
 
+// Task.md compliant routes
 router.get("/validate/:token", feedbackControllerNew.validateToken);
-router.post(
-  "/submit-with-token",
-  feedbackControllerNew.submitFeedbackWithToken,
-);
-router.get("/statistics", feedbackControllerNew.getStatistics);
-router.get("/all", feedbackControllerNew.getAllFeedbacks);
+router.post("/submit", feedbackControllerNew.submitFeedbackWithToken);
 
-module.exports = router;
+// Admin routes
+const adminRouter = express.Router();
+adminRouter.get("/feedback", feedbackControllerNew.getAllFeedbacks);
+adminRouter.get("/statistics", feedbackControllerNew.getStatistics);
+
+module.exports = { router, adminRouter };

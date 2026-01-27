@@ -8,7 +8,10 @@ const googleSheetsService = require("./services/googleSheetsService");
 const emailConfig = require("./config/email");
 
 const feedbackRoutes = require("./routes/feedbackRoutes");
-const feedbackRoutesNew = require("./routes/feedbackRoutesNew");
+const {
+  router: feedbackRoutesNew,
+  adminRouter,
+} = require("./routes/feedbackRoutesNew");
 const orderRoutes = require("./routes/orderRoutes");
 
 const app = express();
@@ -36,9 +39,12 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use("/api/feedback", feedbackRoutes);
-app.use("/api/v2/feedback", feedbackRoutesNew);
+app.use("/api/feedback", feedbackRoutesNew);
+app.use("/api/admin", adminRouter);
 app.use("/api/orders", orderRoutes);
+
+// Legacy routes (backward compatibility)
+app.use("/api/legacy/feedback", feedbackRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
@@ -83,18 +89,14 @@ const startServer = async () => {
       console.log(`💾 Database: ${process.env.DB_NAME}`);
       console.log(`📧 Email: ${process.env.EMAIL_PROVIDER || "gmail"}`);
       console.log("==================================================");
-      console.log("\n📋 Available Endpoints:");
+      console.log("\n📋 Available Endpoints (Task.md Compliant):");
       console.log("  Health Check:        GET  /health");
       console.log("  Complete Order:      POST /api/orders/complete");
-      console.log(
-        "  Validate Token:      GET  /api/v2/feedback/validate/:token",
-      );
-      console.log(
-        "  Submit Feedback:     POST /api/v2/feedback/submit-with-token",
-      );
-      console.log("  Get Statistics:      GET  /api/v2/feedback/statistics");
-      console.log("  Get All Feedback:    GET  /api/v2/feedback/all");
-      console.log("  Legacy Submit:       POST /api/feedback/submit");
+      console.log("  Validate Token:      GET  /api/feedback/validate/:token");
+      console.log("  Submit Feedback:     POST /api/feedback/submit");
+      console.log("  Get All Feedback:    GET  /api/admin/feedback");
+      console.log("  Get Statistics:      GET  /api/admin/statistics");
+      console.log("  Legacy Submit:       POST /api/legacy/feedback/submit");
       console.log("==================================================\n");
     });
   } catch (error) {
