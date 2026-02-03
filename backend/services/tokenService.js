@@ -6,7 +6,7 @@ class TokenService {
     const connection = await pool.getConnection();
 
     try {
-      const token = TokenGenerator.generateSecureToken(32);
+      const token = TokenGenerator.generateSecureToken(8);
       const expirationDate = TokenGenerator.generateExpirationDate(72);
       const feedbackLink = `${frontendUrl}/feedback?token=${token}`;
 

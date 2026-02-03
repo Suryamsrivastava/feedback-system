@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 
 class TokenGenerator {
-  static generateSecureToken(length = 32) {
+  static generateSecureToken(length = 8) {
     return crypto.randomBytes(length).toString("hex");
   }
 
