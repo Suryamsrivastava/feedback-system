@@ -4,7 +4,7 @@ const emailService = require("./emailService");
 const googleSheetsService = require("./googleSheetsService");
 
 class FeedbackService {
-  async triggerFeedbackRequest(order_id) {
+  async triggerFeedbackRequest(order_id, form_type = "customer_satisfaction") {
     const connection = await pool.getConnection();
 
     try {
@@ -44,6 +44,7 @@ class FeedbackService {
         order_id,
         order.email,
         frontendUrl,
+        form_type,
       );
 
       const emailResult = await emailService.sendFeedbackEmail({
@@ -243,6 +244,51 @@ class FeedbackService {
             `);
 
       return feedbacks;
+    } catch (error) {
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+
+  async getFormStatistics() {
+    const connection = await pool.getConnection();
+
+    try {
+      const [formStats] = await connection.query(`
+                SELECT 
+                    form_type,
+                    COUNT(*) as response_count
+                FROM user_feedback
+                WHERE form_type IS NOT NULL AND feedback_submitted_at IS NOT NULL
+                GROUP BY form_type
+            `);
+
+      const totalForms = 5;
+      const formTypes = [
+        "ticket_closure",
+        "customer_satisfaction",
+        "cutomer_feedback",
+        "churn_feedback",
+        "relocation_feedback",
+      ];
+
+      const formData = formTypes.map((type) => {
+        const stat = formStats.find((s) => s.form_type === type);
+        return {
+          form_type: type,
+          response_count: stat ? stat.response_count : 0,
+        };
+      });
+
+      return {
+        total_forms: totalForms,
+        form_statistics: formData,
+        total_responses: formStats.reduce(
+          (sum, stat) => sum + stat.response_count,
+          0,
+        ),
+      };
     } catch (error) {
       throw error;
     } finally {

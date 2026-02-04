@@ -8,5 +8,6 @@ router.get("/all", feedbackController.getAllFeedbacks);
 router.get("/order/:order_id", feedbackController.getFeedbackByOrderId);
 router.get("/user/:order_id", feedbackController.getUserByOrderId);
 router.get("/statistics", feedbackController.getStatistics);
+router.get("/form-statistics", feedbackController.getFormStatistics);
 
 module.exports = router;

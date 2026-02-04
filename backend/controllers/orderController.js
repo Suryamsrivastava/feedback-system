@@ -3,7 +3,7 @@ const feedbackService = require("../services/feedbackService");
 class OrderController {
   async completeOrder(req, res) {
     try {
-      const { order_id } = req.body;
+      const { order_id, form_type } = req.body;
 
       if (!order_id || typeof order_id !== "string") {
         return res.status(400).json({
@@ -12,7 +12,23 @@ class OrderController {
         });
       }
 
-      const result = await feedbackService.triggerFeedbackRequest(order_id);
+      const validFormTypes = [
+        "ticket_closure",
+        "customer_satisfaction",
+        "cutomer_feedback",
+        "churn_feedback",
+        "relocation_feedback",
+      ];
+
+      const finalFormType =
+        form_type && validFormTypes.includes(form_type)
+          ? form_type
+          : "customer_satisfaction";
+
+      const result = await feedbackService.triggerFeedbackRequest(
+        order_id,
+        finalFormType,
+      );
 
       return res.status(200).json(result);
     } catch (error) {

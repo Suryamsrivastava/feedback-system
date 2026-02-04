@@ -24,9 +24,23 @@ const validateFeedback = (req, res, next) => {
     tip_details,
     liked,
     improvement,
+    form_type,
   } = req.body;
 
   const errors = [];
+
+  // Validate form_type
+  const validFormTypes = [
+    "ticket_closure",
+    "customer_satisfaction",
+    "cutomer_feedback",
+    "churn_feedback",
+    "relocation_feedback",
+  ];
+
+  if (form_type && !validFormTypes.includes(form_type)) {
+    errors.push(`form_type must be one of: ${validFormTypes.join(", ")}`);
+  }
 
   // Required fields validation
   if (

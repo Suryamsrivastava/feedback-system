@@ -10,5 +10,6 @@ router.post("/submit", feedbackControllerNew.submitFeedbackWithToken);
 const adminRouter = express.Router();
 adminRouter.get("/feedback", feedbackControllerNew.getAllFeedbacks);
 adminRouter.get("/statistics", feedbackControllerNew.getStatistics);
+adminRouter.get("/form-statistics", feedbackControllerNew.getFormStatistics);
 
 module.exports = { router, adminRouter };

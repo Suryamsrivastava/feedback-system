@@ -139,6 +139,25 @@ class FeedbackControllerNew {
       });
     }
   }
+
+  async getFormStatistics(req, res) {
+    try {
+      const stats = await feedbackService.getFormStatistics();
+
+      return res.status(200).json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      console.error("Error fetching form statistics:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch form statistics",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  }
 }
 
 module.exports = new FeedbackControllerNew();

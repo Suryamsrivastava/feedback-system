@@ -2,7 +2,12 @@ const { pool } = require("../config/database");
 const TokenGenerator = require("../utils/tokenGenerator");
 
 class TokenService {
-  async generateFeedbackToken(order_id, email, frontendUrl) {
+  async generateFeedbackToken(
+    order_id,
+    email,
+    frontendUrl,
+    form_type = "customer_satisfaction",
+  ) {
     const connection = await pool.getConnection();
 
     try {
@@ -32,9 +37,9 @@ class TokenService {
       } else {
         await connection.query(
           `INSERT INTO user_feedback 
-                     (order_id, email, feedback_token, feedback_link, feedback_sent_at, token_expires_at) 
-                     VALUES (?, ?, ?, ?, NOW(), ?)`,
-          [order_id, email, token, feedbackLink, expirationDate],
+                     (order_id, email, feedback_token, feedback_link, feedback_sent_at, token_expires_at, form_type) 
+                     VALUES (?, ?, ?, ?, NOW(), ?, ?)`,
+          [order_id, email, token, feedbackLink, expirationDate, form_type],
         );
       }
 
@@ -61,6 +66,7 @@ class TokenService {
                     uf.email,
                     uf.feedback_submitted_at,
                     uf.token_expires_at,
+                    uf.form_type,
                     u.username,
                     u.mobile,
                     u.service_complete_datetime
@@ -92,6 +98,7 @@ class TokenService {
           mobile: record.mobile,
           service_date: record.service_complete_datetime,
         },
+        form_type: record.form_type || "ticket_closure",
         _internal_order_id: record.order_id,
       };
     } catch (error) {
